@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+<title>Viteska – Mağaza</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+
+<style>
+  :root{
+    --primary:#f27405; --primary-ink:#8a3c00;
+    --text:#1a1209; --muted:#6b7280; --ink:#111;
+    --ok:#18b118; --danger:#e11d48;
+    --line:#ffe2c2; --soft:#fff7ef; --bg:#fff;
+    --blue:#0ea5e9; --blue-ink:#075985; --blue-bg:#eaf7ff;
+    --radius:16px; --safe:env(safe-area-inset-bottom,0px);
+    --shadow:0 10px 30px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; width:100%; min-height:100%; background:var(--bg); color:var(--text); font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial}
+  img{max-width:100%; display:block}
+
+  /* ===== Top bar (HAMBURGER YOK) ===== */
+  .topbar{position:sticky; top:0; z-index:50; background:linear-gradient(90deg,var(--primary),#ff8a20); color:#fff; box-shadow:var(--shadow)}
+  .topbar .inner{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.3px}
+  .brand i{filter:drop-shadow(0 4px 12px rgba(0,0,0,.25));}
+  .actions{display:flex; align-items:center; gap:8px}
+  .btn-top{height:38px; padding:0 14px; border-radius:12px; border:1px solid #ffffff2e; background:#ffffff1a; color:#fff; font-weight:900; cursor:pointer}
+  .btn-top i{margin-right:6px}
+  .btn-top:hover{background:#ffffff2b}
+
+  /* ===== Page ===== */
+  .wrap{max-width:980px; margin:0 auto; padding:16px 14px 120px}
+
+  /* category */
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+  .select{appearance:none; width:100%; max-width:420px; height:46px; border:2px solid #7c3aed; color:#4c1d95; font-weight:900; padding:0 12px; border-radius:12px; background:#fff url('data:image/svg+xml;utf8,<svg fill="%236b21a8" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M5.23 7.21a.75.75 0 011.06.02L10 11.115l3.71-3.885a.75.75 0 111.08 1.04l-4.24 4.45a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z"/></svg>') no-repeat right 12px center; background-size:18px}
+
+  /* policy / info card */
+  .card{background:#fff; border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px}
+  .policy .t{font-weight:900; color:var(--primary-ink); display:flex; align-items:center; gap:8px}
+  .policy .p{color:#6b430a; font-size:.95rem; margin-top:6px}
+
+  /* products */
+  .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:14px}
+  @media(min-width:880px){ .grid{grid-template-columns:repeat(3,1fr)} }
+  .pcard{background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:var(--shadow); display:flex; flex-direction:column; cursor:pointer; transition:transform .15s}
+  .pcard:active{transform:scale(.98)}
+  .thumb{aspect-ratio:4/3; background:linear-gradient(180deg,#fff4ea,#ffe5cc); display:flex; align-items:center; justify-content:center; color:#db6000; font-size:42px}
+  .meta{padding:10px; display:grid; gap:6px}
+  .ttl{font-weight:900; color:var(--primary-ink); font-size:14px}
+  .desc{font-size:12.6px; color:#4b5563; min-height:32px}
+  .tags{display:flex; flex-wrap:wrap; gap:6px}
+  .tag{font-size:11px; padding:4px 8px; border:1px solid #eee; border-radius:999px; background:#fafafa; color:#666}
+  .price{display:flex; align-items:baseline; gap:4px; font-weight:900}
+  .price .tl{color:#7c3aed}
+  .price .num{color:#059669}
+  .bar{margin-top:auto; border-top:1px dashed var(--line); padding:10px; display:flex; align-items:center; justify-content:space-between; gap:8px}
+  .qty{width:64px; height:38px; border:1.5px solid #d1d5db; border-radius:10px; text-align:center}
+  .btn{height:40px; padding:0 12px; border-radius:10px; font-weight:900; border:2px solid var(--primary); background:#fff; color:var(--primary); cursor:pointer}
+  .btn:active{transform:scale(.98)}
+
+  /* cart FAB */
+  .cart-fab{position:fixed; right:12px; bottom:12px; z-index:30; height:56px; border-radius:16px; padding:0 14px; display:flex; align-items:center; gap:10px; background:#111; color:#fff; font-weight:900; border:none; box-shadow:var(--shadow)}
+  .badge{background:#ff4d4f; color:#fff; font-size:12px; font-weight:900; line-height:1; padding:6px 8px; border-radius:999px}
+
+  /* common modal */
+  .modal-bg{display:none; position:fixed; inset:0; background:rgba(0,0,0,.24); z-index:60; align-items:center; justify-content:center}
+  .modal-bg.active{display:flex}
+  .sheet{width:100vw; max-width:860px; height:100vh; background:#fff; display:flex; flex-direction:column; overflow:hidden; border-radius:0}
+  .h{display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #eee}
+  .h .t{font-weight:900; color:var(--primary-ink); display:flex; align-items:center; gap:8px}
+  .c{flex:1; overflow:auto; padding:14px}
+  .f{position:sticky; bottom:0; background:#fff; padding:12px 14px calc(12px + var(--safe)); border-top:1px solid #eee; display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .pay{height:48px; border-radius:12px; border:none; font-weight:900; cursor:pointer}
+  .alt{background:#111; color:#fff}
+  .pri{background:var(--primary); color:#fff}
+
+  /* cart list */
+  .cartlist{display:grid; gap:10px}
+  .ci{display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center; border:1px solid #eee; border-radius:12px; padding:8px; background:#fff}
+  .ci img{width:54px; height:54px; border-radius:10px; object-fit:cover; background:#fff7ef}
+  .ci-ttl{font-weight:800; font-size:14px}
+  .ci-sub{font-size:12px; color:#6b7280}
+  .ci-qty{display:flex; align-items:center; gap:6px}
+  .rm{height:34px; padding:0 10px; border-radius:8px; border:1px solid #ddd; background:#fff}
+
+  .sum{display:grid; gap:6px; font-weight:800; margin-top:8px}
+  .rowj{display:flex; align-items:center; justify-content:space-between}
+  .muted{color:#6b7280; font-weight:600}
+  .ok{color:var(--ok); font-weight:900}
+
+  /* ===== Product DETAIL ===== */
+  .hero{height:230px; border-radius:16px; overflow:hidden; background:#eee}
+  .sec{background:#fff; border:1px solid #eef2f7; border-radius:16px; padding:12px; margin-bottom:12px}
+  .sec-title{font-weight:900; color:var(--primary-ink); margin:2px 0 8px; display:flex; gap:8px; align-items:center}
+  .specs{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+  .spec{font-size:13.5px; color:#2a1601}
+  .acc{border:1px dashed #eee; border-radius:12px}
+  .acc h4{margin:0; padding:10px 12px; font-size:14px; color:#222; display:flex; justify-content:space-between; align-items:center; cursor:pointer}
+  .acc .acc-c{display:none; padding:0 12px 12px 12px; color:#444; font-size:14px; line-height:1.5}
+  .acc.open .acc-c{display:block}
+
+  /* ===== Address (modernize) ===== */
+  .steps{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap}
+  .step{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; border:1px solid var(--line); background:#fff}
+  .step i{color:var(--primary)}
+  .grid2{display:grid; grid-template-columns:1fr; gap:12px}
+  @media(min-width:760px){ .grid2{grid-template-columns:1fr 1fr} }
+  .field{display:grid; gap:6px}
+  .label{font-size:12px; font-weight:900; color:#374151; display:flex; align-items:center; gap:8px}
+  .input,.textarea,.select2{height:44px; padding:0 12px; border:2px solid #e5e7eb; border-radius:12px; font-size:15px}
+  .textarea{height:92px; padding:10px 12px; resize:vertical}
+  .fix{display:grid; grid-template-columns:auto 1fr; gap:8px; align-items:center}
+  .prefix{height:44px; background:#f6f6f6; border:2px solid #e5e7eb; border-radius:12px; padding:0 12px; display:flex; align-items:center; font-weight:800; color:#374151}
+
+  /* ===== IBAN (modernize) ===== */
+  .iban-card{border:2px dashed var(--blue); padding:14px; border-radius:16px; background:var(--blue-bg); box-shadow:var(--shadow)}
+  .iban-card .label{font-size:12px; color:var(--blue-ink); font-weight:900}
+  .iban-card .value{font-size:17px; font-weight:900; margin-top:4px}
+  .iban-line{display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center}
+  .mini-btn{height:42px; padding:0 12px; border-radius:12px; font-weight:900; border:2px solid var(--blue); background:#fff; color:var(--blue-ink); cursor:pointer}
+
+  /* ===== Orders (müşteri) ===== */
+  .pill{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid #eee; font-size:12px}
+  .pill.wait{background:#f0f9ff; border-color:#bae6fd}
+  .pill.ok{background:#ecfdf5; border-color:#bbf7d0}
+  .pill.ship{background:#fefce8; border-color:#fde68a}
+  .pill.cancel{background:#fef2f2; border-color:#fecaca}
+  .o-card{border:1px solid #eee; border-radius:16px; padding:12px; margin-bottom:12px; background:#fff; box-shadow:var(--shadow)}
+  .o-head{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
+  .o-items{color:#374151; font-size:14px; margin-top:6px}
+  .o-row{display:flex; align-items:center; justify-content:space-between; margin-top:6px; font-weight:800}
+  .copy{border:1px solid #ddd; background:#fff; border-radius:10px; padding:8px 12px; cursor:pointer; font-weight:800; font-size:12px}
+
+  /* Toast */
+  .toast{position:fixed; left:50%; transform:translateX(-50%); bottom:80px; background:#111; color:#fff; padding:10px 14px; border-radius:999px; font-weight:800; display:none; z-index:70}
+</style>
+</head>
+<body>
+
+<!-- ===== Topbar ===== -->
+<header class="topbar">
+  <div class="inner">
+    <div class="brand"><i class="fa-solid fa-car-side"></i> VITESKA</div>
+    <div class="actions">
+      <button class="btn-top" id="btnOrders"><i class="fa-solid fa-clipboard-list"></i> Siparişlerim</button>
+      <button class="btn-top" onclick="window.location.href='http://action_share'"><i class="fa-solid fa-share-nodes"></i> Paylaş</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- Kategori -->
+  <div class="row">
+    <select id="cat" class="select" aria-label="Kategori seç">
+      <option value="">Tüm Kategoriler</option>
+      <option value="aydinlatma">Aydınlatma</option>
+      <option value="elektronik">Elektronik</option>
+      <option value="dış-aksesuar">Dış Aksesuar</option>
+      <option value="iç-aksesuar">İç Aksesuar</option>
+      <option value="oto-sus">Oto Süs</option>
+      <option value="bakim">Bakım-Temizlik</option>
+      <option value="krom-sac">Krom-Saç</option>
+      <option value="cam-filmi">Cam Filmi</option>
+      <option value="kislik">Kışlık</option>
+    </select>
+  </div>
+
+  <!-- Kargo Politikası -->
+  <section class="card policy" style="margin-top:12px">
+    <div class="t"><i class="fa-solid fa-truck"></i> Kargo Politikası</div>
+    <div class="p">
+      Kargo ücreti <b>müşteri tarafından</b> ödenir. IBAN ödemeniz doğrulandıktan sonra
+      siparişiniz kargoya verilir ve e-posta ile <b>takip kodu</b> gönderilir.
+    </div>
+  </section>
+
+  <!-- Ürünler -->
+  <section id="grid" class="grid"></section>
+</main>
+
+<!-- Cart FAB -->
+<button class="cart-fab" id="openCart"><i class="fa-solid fa-cart-shopping"></i> Sepet <span class="badge" id="cartCount">0</span></button>
+
+<!-- ===== CART ===== -->
+<div class="modal-bg" id="cartModal" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-label="Sepet">
+    <div class="h"><div class="t"><i class="fa-solid fa-bag-shopping"></i> Sepetin</div></div>
+    <div class="c">
+      <div id="cartList" class="cartlist"></div>
+      <div class="sum">
+        <div class="rowj"><span class="muted">Ara Toplam</span><span id="sumSub">0.00 TL</span></div>
+        <div class="rowj"><span class="muted">Kargo</span><span>Alıcı Öder</span></div>
+        <div class="rowj"><span>Ödenecek</span><span id="sumGrand" class="ok">0.00 TL</span></div>
+      </div>
+    </div>
+    <div class="f">
+      <button class="pay alt" onclick="closeCart()">Geri</button>
+      <button class="pay pri" onclick="openAddress()"><i class="fa-solid fa-building-columns"></i> Devam Et (IBAN)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PRODUCT DETAIL ===== -->
+<div class="modal-bg" id="productModal">
+  <div class="sheet">
+    <div class="h"><div class="t"><i class="fa-solid fa-box"></i> Ürün Detayı</div></div>
+    <div class="c">
+      <div class="hero"><img id="pImg" alt="" style="width:100%; height:100%; object-fit:cover"></div>
+
+      <div class="sec">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
+          <div style="font-weight:900; color:var(--primary-ink); font-size:1.2rem" id="pTitle"></div>
+          <div class="price"><span class="tl">₺</span><span class="num" id="pPrice">0.00</span></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title"><i class="fa-solid fa-align-left"></i> Ürün Açıklaması</div>
+        <div id="pLong"></div>
+        <div class="acc" id="acc-icerik">
+          <h4 onclick="this.parentElement.classList.toggle('open')">Kutu İçeriği <i class="fa-solid fa-chevron-down"></i></h4>
+          <div class="acc-c" id="pBox"></div>
+        </div>
+        <div class="acc" id="acc-teknik" style="margin-top:8px">
+          <h4 onclick="this.parentElement.classList.toggle('open')">Teknik Bilgiler <i class="fa-solid fa-chevron-down"></i></h4>
+          <div class="acc-c" id="pTech"></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-title"><i class="fa-solid fa-list-check"></i> Öne Çıkan Özellikler</div>
+        <div id="pSpecs" class="specs"></div>
+      </div>
+
+      <div class="sec">
+        <div class="grid2" style="align-items:center">
+          <div class="label"><i class="fa-solid fa-plus-minus"></i> Adet</div>
+          <input id="pQty" class="qty" type="number" min="1" value="1" style="justify-self:start; width:110px">
+        </div>
+      </div>
+    </div>
+    <div class="f">
+      <button class="pay alt" onclick="closeProduct()">Kapat</button>
+      <button class="pay pri" onclick="addDetailToCart()"><i class="fa-solid fa-cart-plus"></i> Sepete Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADDRESS (Modern) ===== -->
+<div class="modal-bg" id="addressModal">
+  <div class="sheet">
+    <div class="h"><div class="t"><i class="fa-solid fa-location-dot"></i> Teslimat Bilgileri</div></div>
+    <div class="c">
+
+      <div class="steps">
+        <div class="step"><i class="fa-solid fa-bag-shopping"></i> 1. Sepet</div>
+        <div class="step" style="border-color:#fdba74; background:#fff3e6"><i class="fa-solid fa-location-dot"></i> 2. Adres</div>
+        <div class="step"><i class="fa-solid fa-building-columns"></i> 3. IBAN</div>
+      </div>
+
+      <div class="sec">
+        <div class="grid2">
+          <div class="field">
+            <label class="label"><i class="fa-regular fa-user"></i> Ad Soyad</label>
+            <input id="adFull" class="input" autocomplete="name" placeholder="Örn: Kaan Ayaz">
+          </div>
+
+          <div class="field">
+            <label class="label"><i class="fa-solid fa-phone"></i> Telefon</label>
+            <div class="fix">
+              <div class="prefix">+90</div>
+              <input id="adPhone10" class="input" placeholder="10 hane (5xx...)" inputmode="numeric" maxlength="10">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label"><i class="fa-regular fa-envelope"></i> E-posta</label>
+            <div class="fix">
+              <input id="adMailLocal" class="input" placeholder="kullanici.ad">
+              <div class="prefix">@gmail.com</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label"><i class="fa-solid fa-city"></i> Şehir</label>
+            <select id="adCity" class="select2 input">
+              <option value="" disabled selected hidden>Şehir seçin</option>
+              <option value="istanbul">İstanbul</option><option value="ankara">Ankara</option><option value="izmir">İzmir</option>
+              <option value="bursa">Bursa</option><option value="antalya">Antalya</option><option value="kocaeli">Kocaeli</option>
+              <option value="adana">Adana</option><option value="gaziantep">Gaziantep</option><option value="konya">Konya</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="label"><i class="fa-solid fa-location-crosshairs"></i> İlçe</label>
+            <input id="adDistrict" class="input" placeholder="İlçe">
+          </div>
+
+          <div class="field" style="grid-column:1/-1">
+            <label class="label"><i class="fa-solid fa-map"></i> Adres</label>
+            <textarea id="adLine" class="textarea" placeholder="Mahalle / Cadde / No / Daire…"></textarea>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="f">
+      <button class="pay alt" onclick="closeAddress()">Geri</button>
+      <button class="pay pri" onclick="confirmAddress()"><i class="fa-solid fa-building-columns"></i> IBAN’a Geç</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== IBAN (Modern) ===== -->
+<div class="modal-bg" id="ibanModal">
+  <div class="sheet">
+    <div class="h"><div class="t"><i class="fa-solid fa-building-columns"></i> IBAN ile Ödeme</div></div>
+    <div class="c">
+
+      <div class="steps">
+        <div class="step"><i class="fa-solid fa-bag-shopping"></i> 1. Sepet</div>
+        <div class="step"><i class="fa-solid fa-location-dot"></i> 2. Adres</div>
+        <div class="step" style="border-color:#93c5fd; background:#e5f2ff"><i class="fa-solid fa-building-columns"></i> 3. IBAN</div>
+      </div>
+
+      <div class="iban-card">
+        <div class="label">Banka</div>
+        <div class="value" id="ibBank">Yapı Kredi</div>
+        <div class="label" style="margin-top:8px">Hesap Sahibi</div>
+        <div class="value" id="ibHolder">kaan ayaz</div>
+        <div class="label" style="margin-top:8px">IBAN</div>
+        <div class="iban-line">
+          <div class="value" id="ibIban">TR43 0006 7010 0000 0001 1287 699</div>
+          <button class="mini-btn" onclick="copyIban()"><i class="fa-regular fa-copy"></i> Kopyala</button>
+        </div>
+      </div>
+
+      <div class="sec" style="margin-top:12px">
+        <div class="rowj"><span class="muted">Sipariş No</span><span id="ibOrderId" style="font-weight:900">-</span></div>
+        <div class="rowj" style="margin-top:6px"><span class="muted">Ara Toplam</span><span id="ibPay" class="ok">0.00 TL</span></div>
+
+        <div class="label" style="margin-top:12px; color:var(--blue-ink)"><i class="fa-solid fa-note-sticky"></i> Havale/EFT Açıklaması</div>
+        <div class="iban-line" style="margin-top:6px">
+          <div class="value" id="ibDescFull" style="word-break:break-word">-</div>
+          <button class="mini-btn" onclick="copyDescFull()"><i class="fa-regular fa-copy"></i> Kopyala</button>
+        </div>
+
+        <div class="card" style="margin-top:10px; background:#f5fbff; border-color:#dbeafe">
+          <div style="color:#075985; line-height:1.5"><i class="fa-solid fa-circle-info"></i> Lütfen açıklamayı <b>aynen</b> yapıştırın: <b>Sipariş No + Ad Soyad</b>. Ödeme doğrulanınca kargo takip kodu e-posta ile gelir.</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="f">
+      <button class="pay alt" onclick="closeIban()">Geri</button>
+      <button class="pay pri" onclick="submitIbanOrder()"><i class="fa-solid fa-check"></i> Siparişi Oluştur</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MÜŞTERİ – SİPARİŞLERİM ===== -->
+<div class="modal-bg" id="ordersModal">
+  <div class="sheet">
+    <div class="h">
+      <div class="t"><i class="fa-solid fa-clipboard-list"></i> Siparişlerim</div>
+      <div class="row">
+        <input id="ordSearch" class="input" placeholder="ID / ad / e-posta ara…" style="height:38px; width:240px">
+        <button class="pay alt" onclick="closeOrders()">Kapat</button>
+      </div>
+    </div>
+    <div class="c"><div id="ordersList"></div></div>
+    <div class="f" style="grid-template-columns:1fr">
+      <button class="pay pri" onclick="copyIban()"><i class="fa-solid fa-building-columns"></i> IBAN’ı Kopyala</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== Data ===== */
+const PRODUCTS=[
+  {id:'SET-ROX-12', cat:'bakim', icon:'fa-spray-can-sparkles', title:'12’li Efsane Yıkama & Bakım Seti (Kovalı)', price:1948.70, tags:['detaylı bakım','fırsat seti','kova hediyeli'], specs:['Çizik bırakmayan formül','Yüksek köpük','Koku giderici','Hızlı parlatma','Plastik yenileyici','Cam temizleyici'], long:'Aracınızın iç/dış detaylı temizliği için komple çözümdür. Boyaya zarar vermeyen pH dengeli şampuan, jant kir ve zift çözücü, plastik/lastik parlatıcı, iç yüzey temizleyici, cam & torpido bakım ürünleri içerir. Düzenli kullanımda uzun süreli parlaklık ve koruma sağlar.', box:'1x Kova • 2x Mikrofiber Bez • 1x Jant Temizleyici • 1x Zift Çözücü • 1x pH Dengeli Şampuan • 1x Plastik/Lastik Parlatıcı • 1x Cam Temizleyici • 1x Torpido & Vinil Bakım • 1x Sünger • 1x Fırça • 1x Kurulama Bezi • 1x Eldiven', tech:'Hacim: 12 parça / 6 farklı kimyasal • pH: 6.5–7.5 • Uygulama: İç/Dış • Uyum: Oto/MC • Menşei: TR • Raf Ömrü: 24 ay'},
+  {id:'PH-HLD-01', title:'Manyetik Telefon Tutucu', price:149.90, cat:'iç-aksesuar', icon:'fa-mobile-screen-button', tags:['mıknatıs','universal'], specs:['360° dönebilir','Alüminyum gövde','Güçlü mıknatıs','Kauçuk ped'], long:'Havalandırma ızgarasına kolay montaj, sağlam mıknatıs tutuş.', box:'Tutucu gövde • 2x metal plaka • Kılavuz', tech:'Malzeme: Alüminyum/ABS • Açı: 360° • Uyum: Tüm telefonlar'},
+  {id:'LED-BAR-01', title:'LED Aydınlatma Bar 60cm', price:299.00, cat:'aydinlatma', icon:'fa-lightbulb', tags:['12V','beyaz'], specs:['6000K beyaz','IP65','Düşük tüketim','Uzun ömür'], long:'Gece görüşünü artıran yüksek lumen değerli LED bar.', box:'LED bar • Montaj kelepçeleri • Kablo', tech:'Voltaj: 12V • Renk sıcaklığı: 6000K • IP:65'},
+  {id:'CAR-CHG-20W', title:'Çakmaklık Hızlı Şarj 20W', price:229.00, cat:'elektronik', icon:'fa-bolt', tags:['20W','çift port'], specs:['PD 20W','QC 3.0','Aşırı akım koruma','Alüminyum'], long:'Telefon ve tabletler için hızlı şarj desteği.', box:'20W çakmaklık adaptör', tech:'Giriş: 12–24V • Çıkış: USB-A QC3.0 + USB-C PD'},
+  {id:'CHROME-STRIP', title:'Krom Çıta Şerit 5m', price:119.00, cat:'krom-sac', icon:'fa-ruler-combined', tags:['krom','styling'], specs:['5 metre','Kolay uygulama','Dayanıklı yapışkan'], long:'Dış tasarım şıklığı için krom kaplama dekoratif şerit.', box:'5m krom şerit', tech:'Genişlik: 10mm • Uzunluk: 5m'},
+  {id:'WINDOW-TINT', title:'Cam Filmi %35', price:349.00, cat:'cam-filmi', icon:'fa-window-maximize', tags:['%35','UV koruma'], specs:['Isı yalıtımı','UV koruma','Kolay uygulama'], long:'Güneş ısısını azaltır, iç mekânı korur.', box:'Film rulosu • Uygulama spatulası', tech:'Gölgeleme: %35 • UV Blok: %99'}
+];
+
+const IBAN_INFO={ bank:'Yapı Kredi', holder:'kaan ayaz', iban:'TR43 0006 7010 0000 0001 1287 699' };
+
+/* ===== helpers ===== */
+const $=s=>document.querySelector(s);
+const toast=msg=>{const t=$("#toast"); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',1800);};
+const fmt=n=>n.toFixed(2)+' TL';
+function genOrderId(){const ts=Date.now().toString(36).toUpperCase(); const rnd=Math.floor(Math.random()*1e6).toString(36).toUpperCase(); return (ts+rnd).slice(-10);}
+function copy(txt){navigator.clipboard.writeText(txt); toast('Kopyalandı');}
+
+/* ===== state ===== */
+let cart=JSON.parse(localStorage.getItem('shopCart')||'{}');
+function saveCart(){ localStorage.setItem('shopCart', JSON.stringify(cart)); renderCartBadge(); }
+
+/* ===== products list ===== */
+function renderList(){
+  const wrap=$("#grid"); wrap.innerHTML='';
+  const cat=$("#cat").value;
+  PRODUCTS.filter(p=>!cat || p.cat===cat).forEach(p=>{
+    const el=document.createElement('article'); el.className='pcard'; el.onclick=()=>openProduct(p.id);
+    const blurb=(p.long||'').trim();
+    el.innerHTML=`
+      <div class="thumb"><i class="fa-solid ${p.icon||'fa-box'}"></i></div>
+      <div class="meta">
+        <div class="ttl">${p.title}</div>
+        <div class="desc">${blurb.slice(0,72)}${blurb.length>72?'…':''}</div>
+        <div class="tags">${(p.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <div class="price"><span class="tl">₺</span><span class="num">${p.price.toFixed(2)}</span></div>
+      </div>
+      <div class="bar" onclick="event.stopPropagation()">
+        <input class="qty" type="number" min="1" value="1" id="q_${p.id}">
+        <button class="btn" onclick="addToCart('${p.id}', +document.getElementById('q_${p.id}').value||1)"><i class="fa-solid fa-cart-plus"></i> Sepete</button>
+      </div>`;
+    wrap.appendChild(el);
+  });
+}
+function addToCart(sku, qty=1){ cart[sku]=(cart[sku]||0)+Math.max(1,qty); saveCart(); toast('Sepete eklendi'); }
+function removeFromCart(sku){ delete cart[sku]; saveCart(); renderCart(); }
+function setQty(sku,q){ const n=Math.max(1,+q||1); cart[sku]=n; saveCart(); renderCart(); }
+function sumCart(){ let sub=0; Object.entries(cart).forEach(([sku,qty])=>{ const p=PRODUCTS.find(x=>x.id===sku); if(p) sub+=p.price*qty;}); return {sub, grand:sub}; }
+function renderCartBadge(){ $("#cartCount").textContent=Object.values(cart).reduce((a,b)=>a+b,0); }
+
+/* ===== cart ===== */
+function openCart(){ renderCart(); $("#cartModal").classList.add('active'); }
+function closeCart(){ $("#cartModal").classList.remove('active'); }
+function renderCart(){
+  const list=$("#cartList"); list.innerHTML='';
+  if(Object.keys(cart).length===0){
+    list.innerHTML='<div class="card"><div class="t" style="font-weight:900;color:#374151"><i class="fa-solid fa-box-open"></i> Sepetin boş</div><div class="p muted" style="margin-top:6px">Mağazadan ürün ekleyebilirsin.</div></div>';
+  }else{
+    Object.entries(cart).forEach(([sku,qty])=>{
+      const p=PRODUCTS.find(x=>x.id===sku); if(!p) return;
+      const row=document.createElement('div'); row.className='ci';
+      row.innerHTML=`
+        <img src="https://dummyimage.com/120x120/ffe9db/333&text=${encodeURIComponent((p.title||sku).split(' ')[0])}" alt="${p.title}">
+        <div>
+          <div class="ci-ttl">${p.title}</div>
+          <div class="ci-sub">₺ ${p.price.toFixed(2)} • <span class="muted">${sku}</span></div>
+        </div>
+        <div class="ci-qty">
+          <input class="qty" type="number" min="1" value="${qty}" onchange="setQty('${sku}', this.value)">
+          <button class="rm" onclick="removeFromCart('${sku}')">Sil</button>
+        </div>`;
+      list.appendChild(row);
+    });
+  }
+  const s=sumCart();
+  $("#sumSub").textContent=fmt(s.sub);
+  $("#sumGrand").textContent=fmt(s.grand);
+}
+
+/* ===== product detail ===== */
+let currentSku=null;
+function openProduct(sku){
+  const p=PRODUCTS.find(x=>x.id===sku); if(!p) return;
+  currentSku=sku;
+  $("#pImg").src=`https://dummyimage.com/1200x600/ffe9db/333&text=${encodeURIComponent(p.title)}`;
+  $("#pTitle").textContent=p.title;
+  $("#pPrice").textContent=p.price.toFixed(2);
+  $("#pSpecs").innerHTML=(p.specs||[]).map(s=>`<div class="spec">• ${s}</div>`).join('');
+  $("#pLong").innerHTML = `<p style="margin:0">${(p.long||'')}</p>`;
+  $("#pBox").innerHTML  = `<ul style="margin:10px 0 0 18px">${(p.box||'—').split('•').map(x=>x.trim()).filter(Boolean).map(x=>`<li>${x}</li>`).join('')}</ul>`;
+  $("#pTech").innerHTML = `<p style="margin:10px 0 0">${(p.tech||'—')}</p>`;
+  $("#pQty").value=1;
+  $("#productModal").classList.add('active');
+}
+function closeProduct(){ $("#productModal").classList.remove('active'); }
+function addDetailToCart(){ const qty=Math.max(1,+$("#pQty").value||1); addToCart(currentSku, qty); closeProduct(); }
+
+/* ===== address ===== */
+function openAddress(){
+  const s=sumCart();
+  if(s.sub<=0){ toast('Sepete ürün eklemeden devam edemezsin'); return; }
+  const saved=JSON.parse(localStorage.getItem('shopAddr')||'null');
+  if(saved){
+    $("#adFull").value=saved.full||'';
+    $("#adPhone10").value=(saved.phone10||'');
+    const m=(saved.mail||'').toLowerCase();
+    $("#adMailLocal").value=m.endsWith('@gmail.com') ? m.replace('@gmail.com','') : '';
+    $("#adCity").value=saved.city||'';
+    $("#adDistrict").value=saved.district||'';
+    $("#adLine").value=saved.line||'';
+  }
+  $("#addressModal").classList.add('active');
+}
+function closeAddress(){ $("#addressModal").classList.remove('active'); }
+
+function confirmAddress(){
+  const full=$("#adFull").value.trim();
+  const phone10=($("#adPhone10").value||'').replace(/\D/g,'');
+  const mailLocal=$("#adMailLocal").value.trim();
+  const mail = (mailLocal ? (mailLocal + '@gmail.com') : '');
+  const city=$("#adCity").value;
+  const district=$("#adDistrict").value.trim();
+  const line=$("#adLine").value.trim();
+  if(!full){ toast('Ad Soyad zorunlu'); return; }
+  if(!/^\d{10}$/.test(phone10)){ toast('Telefon 10 hane olmalı'); return; }
+  if(!/^[^\s@]{1,64}$/.test(mailLocal)){ toast('Geçerli bir e-posta kullanıcı adı gir'); return; }
+  if(!city){ toast('Şehir seçin'); return; }
+  if(!district){ toast('İlçe zorunlu'); return; }
+  if(!line){ toast('Adres zorunlu'); return; }
+  localStorage.setItem('shopAddr', JSON.stringify({full, phone:'+90'+phone10, phone10, mail, city, district, line}));
+  openIban();
+  closeAddress();
+}
+
+/* ===== IBAN ===== */
+let pendingIbanOrder=null;
+function openIban(){
+  const s=sumCart();
+  const id=genOrderId();
+  pendingIbanOrder={id,total:s.grand};
+  const a=JSON.parse(localStorage.getItem('shopAddr')||'{}');
+  $("#ibOrderId").textContent=id;
+  $("#ibPay").textContent=fmt(s.grand);
+  $("#ibDescFull").textContent=`${id} ${a.full||''}`;
+  $("#ibanModal").classList.add('active');
+}
+function closeIban(){ $("#ibanModal").classList.remove('active'); }
+function copyIban(){ copy(IBAN_INFO.iban); }
+function copyDescFull(){ copy($("#ibDescFull").textContent||''); }
+
+function submitIbanOrder(){
+  if(!pendingIbanOrder){ toast('Bir hata oluştu'); return; }
+  const s=sumCart(); if(s.grand<=0){ toast('Sepet boş'); return; }
+  const addr=JSON.parse(localStorage.getItem('shopAddr')||'{}');
+  const order={ id:pendingIbanOrder.id, ts:Date.now(), items:{...cart}, sub:s.grand, shipPolicy:'Alıcı Öder', total:s.grand, method:'IBAN', iban:IBAN_INFO.iban, bank:IBAN_INFO.bank, holder:IBAN_INFO.holder, addr, status:'Ödeme Bekleniyor' };
+  const orders=JSON.parse(localStorage.getItem('shopOrders')||'[]'); orders.unshift(order);
+  localStorage.setItem('shopOrders', JSON.stringify(orders));
+  cart={}; saveCart(); renderCart();
+  closeIban(); closeCart();
+  toast('Sipariş oluşturuldu. IBAN’a havale/EFT yapınız.');
+  setTimeout(()=>openOrders(order.id), 800);
+}
+
+/* ===== Customer Orders ===== */
+function openOrders(highlightId=null){ renderOrders(highlightId); $("#ordersModal").classList.add("active"); }
+function closeOrders(){ $("#ordersModal").classList.remove("active"); }
+function renderOrders(highlightId=null){
+  const list=JSON.parse(localStorage.getItem('shopOrders')||'[]');
+  const wrap=$("#ordersList");
+  const q=($("#ordSearch")?.value||"").toLowerCase().trim();
+  const filtered = q ? list.filter(o=>{
+    const email=(o.addr?.mail||'').toLowerCase();
+    const name=(o.addr?.full||'').toLowerCase();
+    const items=Object.keys(o.items||{}).join(' ').toLowerCase();
+    return (o.id||'').toLowerCase().includes(q) || email.includes(q) || name.includes(q) || items.includes(q);
+  }) : list;
+
+  if(filtered.length===0){
+    wrap.innerHTML='<div class="card"><div class="t" style="font-weight:900"><i class="fa-solid fa-circle-info"></i> Henüz siparişiniz yok</div><div class="p muted" style="margin-top:6px">Mağazadan ürün ekleyip IBAN ile sipariş oluşturduktan sonra burada göreceksiniz.</div></div>';
+    return;
+  }
+  wrap.innerHTML='';
+  filtered.forEach(o=>{
+    const itemsText = Object.entries(o.items||{}).map(([sku,qty])=>{
+      const p=PRODUCTS.find(x=>x.id===sku)||{title:sku,price:0};
+      return `${p.title} <span class="muted">(${sku})</span> ×${qty}`;
+    }).join(' • ');
+
+    const pillClass = o.status==='Onaylandı' ? 'ok' : (o.status==='Kargoda' ? 'ship' : (o.status==='İptal' ? 'cancel' : 'wait'));
+
+    const card=document.createElement('div'); card.className='o-card'; card.id='ord_'+o.id;
+    card.innerHTML=`
+      <div class="o-head">
+        <div>
+          <div style="font-weight:900">#${o.id}</div>
+          <div class="muted" style="font-size:12px">${new Date(o.ts).toLocaleString('tr-TR')}</div>
+        </div>
+        <div class="pill ${pillClass}"><i class="fa-solid fa-circle"></i> ${o.status||'Ödeme Bekleniyor'}</div>
+      </div>
+      <div class="o-items">${itemsText||'-'}</div>
+      <div class="o-row"><span>Tutar</span><span class="ok">₺ ${o.total.toFixed(2)}</span></div>
+      <div class="o-row"><span>Ödeme</span><span>IBAN – ${IBAN_INFO.bank}</span></div>
+      <div style="margin-top:8px">
+        <div class="muted" style="font-size:12px">Havale/EFT açıklaması:</div>
+        <div class="iban-line" style="margin-top:4px">
+          <div class="value" style="font-size:14px">${o.id} ${o.addr?.full||''}</div>
+          <button class="copy" onclick="copy('${o.id} ${o.addr?.full||''}')"><i class="fa-regular fa-copy"></i> Kopyala</button>
+        </div>
+      </div>
+      <div class="muted" style="margin-top:8px; font-size:12px">
+        Adres: ${o.addr?.line||'-'} / ${o.addr?.district||''} / ${o.addr?.city||''} • Telefon: ${o.addr?.phone||'-'} • E-posta: ${o.addr?.mail||'-'}
+      </div>
+    `;
+    wrap.appendChild(card);
+    if(highlightId && o.id===highlightId){ card.style.boxShadow='0 0 0 12px #f2740522'; setTimeout(()=>card.style.boxShadow='var(--shadow)', 1200); }
+  });
+}
+
+/* ===== boot ===== */
+function init(){
+  $("#cat").addEventListener('change', renderList);
+  $("#openCart").addEventListener('click', openCart);
+  $("#btnOrders").addEventListener('click', ()=>openOrders());
+  document.getElementById('ordSearch').addEventListener('input', ()=>renderOrders());
+  renderList(); renderCartBadge();
+}
+init();
+</script>
+</body>
+</html>
